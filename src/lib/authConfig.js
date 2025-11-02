@@ -9,14 +9,28 @@ import pg from 'pg';
 export default async function authConfig(server) {
   const passport = new Authenticator();
   server.register(cookie);
-  const pgPool = new pg.Pool({
-    host: process.env.PGHOST,
+  
+  // Railwayなどのクラウド環境ではSSL接続が必要な場合がある
+  const host = process.env.PGHOST || 'localhost';
+  const isRemote = host && !host.includes('localhost') && !host.includes('127.0.0.1');
+  
+  const pgPoolConfig = {
+    host: host,
     port: parseInt(process.env.PGPORT, 10),
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE,
     max: 20,
-  });
+  };
+  
+  // リモート接続の場合、SSL設定を追加
+  if (isRemote) {
+    pgPoolConfig.ssl = {
+      rejectUnauthorized: false
+    };
+  }
+  
+  const pgPool = new pg.Pool(pgPoolConfig);
   
   // 接続テスト
   try {

@@ -24,10 +24,24 @@ server.register(view, {
 
 server.register(formbody)
 
-const connectionString = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
-await server.register(postgres, {
+// Railwayなどのクラウド環境ではSSL接続が必要な場合がある
+const host = process.env.PGHOST || 'localhost';
+const isRemote = host && !host.includes('localhost') && !host.includes('127.0.0.1');
+
+const connectionString = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${host}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
+
+const postgresConfig = {
   connectionString
-})
+};
+
+// リモート接続の場合、SSL設定を追加
+if (isRemote) {
+  postgresConfig.ssl = {
+    rejectUnauthorized: false
+  };
+}
+
+await server.register(postgres, postgresConfig)
 
 const passport = await authConfig(server)
 
