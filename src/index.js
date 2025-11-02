@@ -39,9 +39,21 @@ if (isRemote) {
   postgresConfig.ssl = {
     rejectUnauthorized: false
   };
+  console.log(`PostgreSQL接続設定: host=${host}, port=${process.env.PGPORT}, database=${process.env.PGDATABASE}, ssl=true`);
+} else {
+  console.log(`PostgreSQL接続設定: host=${host}, port=${process.env.PGPORT}, database=${process.env.PGDATABASE}, ssl=false`);
 }
 
-await server.register(postgres, postgresConfig)
+// 接続エラーのハンドリング
+try {
+  await server.register(postgres, postgresConfig)
+  console.log('PostgreSQL接続設定完了');
+} catch (error) {
+  console.error('PostgreSQL接続設定エラー:', error.message);
+  console.error('エラーコード:', error.code);
+  // 接続設定エラーでもアプリケーションは起動を続ける
+  console.warn('PostgreSQL接続設定エラーは無視して続行します');
+}
 
 const passport = await authConfig(server)
 

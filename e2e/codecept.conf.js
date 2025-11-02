@@ -13,6 +13,7 @@ exports.config = {
   helpers: {
     Playwright: {
       url: 'http://localhost',
+      url: process.env.BASE_URL || 'http://localhost:8080',
       show: true,
       browser: 'chromium'
     }

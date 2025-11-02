@@ -16,7 +16,7 @@ export default async function authConfig(server) {
   
   const pgPoolConfig = {
     host: host,
-    port: parseInt(process.env.PGPORT, 10),
+    port: parseInt(process.env.PGPORT || '5432', 10),
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE,
@@ -28,18 +28,24 @@ export default async function authConfig(server) {
     pgPoolConfig.ssl = {
       rejectUnauthorized: false
     };
+    console.log(`セッションストア用PostgreSQL接続設定: host=${host}, port=${pgPoolConfig.port}, database=${pgPoolConfig.database}, ssl=true`);
+  } else {
+    console.log(`セッションストア用PostgreSQL接続設定: host=${host}, port=${pgPoolConfig.port}, database=${pgPoolConfig.database}, ssl=false`);
   }
   
   const pgPool = new pg.Pool(pgPoolConfig);
   
-  // 接続テスト
+  // 接続テスト（エラー時も続行）
   try {
     const testClient = await pgPool.connect();
     testClient.release();
     console.log('セッションストア用PostgreSQL接続成功');
   } catch (err) {
-    console.error('セッションストア用PostgreSQL接続エラー:', err);
-    throw err;
+    console.error('セッションストア用PostgreSQL接続エラー:', err.message);
+    console.error('エラーコード:', err.code);
+    console.error('エラースタック:', err.stack);
+    // エラーをthrowしない（接続プールが後で再接続を試みる）
+    console.warn('セッションストアの接続エラーは無視して続行します（接続プールが自動的に再試行します）');
   }
   const pgSession = new connectPgSimple(session)
   // allow insecure cookie only during development
