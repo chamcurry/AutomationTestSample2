@@ -11,11 +11,22 @@ export default async function authConfig(server) {
   server.register(cookie);
   const pgPool = new pg.Pool({
     host: process.env.PGHOST,
-    port: process.env.PGPORT,
+    port: parseInt(process.env.PGPORT, 10),
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
     max: 20,
   });
+  
+  // 接続テスト
+  try {
+    const testClient = await pgPool.connect();
+    testClient.release();
+    console.log('セッションストア用PostgreSQL接続成功');
+  } catch (err) {
+    console.error('セッションストア用PostgreSQL接続エラー:', err);
+    throw err;
+  }
   const pgSession = new connectPgSimple(session)
   // allow insecure cookie only during development
   server.register(session, {

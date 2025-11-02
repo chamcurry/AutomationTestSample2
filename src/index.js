@@ -24,8 +24,8 @@ server.register(view, {
 
 server.register(formbody)
 
-const connectionString = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}`;
-server.register(postgres, {
+const connectionString = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
+await server.register(postgres, {
   connectionString
 })
 
@@ -42,6 +42,17 @@ server.register(publicRoutes, { passport })
 server.get('/', (request, reply) => {
   reply.redirect(302, '/items')
 })
+
+server.setErrorHandler(async (error, request, reply) => {
+  console.error('エラー発生:', error);
+  console.error('エラースタック:', error.stack);
+  reply.status(500).send({ 
+    statusCode: 500, 
+    error: 'Internal Server Error', 
+    message: error.message,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+  });
+});
 
 server.listen({ host: '0.0.0.0', port: process.env.PORT || 8080 }, (err, address) => {
   if (err) {
