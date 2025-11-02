@@ -8,8 +8,9 @@
     "db:migrate": "node db/migrate.mjs",
     "db:migrate:local": "USE_LOCAL_DB=true node db/migrate.mjs",
     "dev": "docker compose up -d && nodemon src/index.js",
-    "build": "npm run db:migrate",
-    "start": "node src/index.js"
+    "build": "echo 'Build completed'",
+    "start": "node db/migrate.mjs && node src/index.js",
+    "start:no-migrate": "node src/index.js"
   },
   "repository": {
     "type": "git",

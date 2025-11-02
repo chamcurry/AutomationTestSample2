@@ -107,6 +107,13 @@ async function main() {
     if (error.stack) {
       console.error('Stack trace:', error.stack);
     }
+    // 接続エラーの場合、アプリケーション起動時に再試行できるよう0で終了
+    // （ビルド時の接続エラーを回避するため）
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET') {
+      console.warn('Database connection failed during migration. This is expected during build time.');
+      console.warn('Migrations will be run at application startup.');
+      process.exit(0);
+    }
     process.exit(1);
   } finally {
     // Once done migrating, close your connection.
